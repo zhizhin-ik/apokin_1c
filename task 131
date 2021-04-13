@@ -1,0 +1,120 @@
+#include<iostream>
+#include<map>
+#include<string>
+#include<string>
+#include<vector>
+#include<set>
+#include <algorithm>
+
+using namespace std;
+
+set<int> Sort(vector<set<int>> H, set<int> S, set<int> C, map<int, int> V) { // функция выбирает наилучший путь из возможных разветвлений курса
+  int min = 0;
+  set<int> min_set;
+  for (auto i = 0; i < H.size(); ++i) {
+    set<int> G;
+    set_union(S.begin(), S.end(), H[i].begin(), H[i].end(), back_inserter(G));
+    int x = G.size();
+    if (x < min) {
+      min = x;
+      min_set = H[i];
+    }
+    if (min == x) {
+      set<int> K;
+      set<int> K1;
+      set_union(H[i].begin(), H[i].end(), C.begin(), C.end(), back_inserter(K));
+      set_union(min_set.begin(), min_set.end(), C.begin(), C.end(), back_inserter(K1));
+      int count_prior = 0;
+      int count_prior1 = 0;
+      for (auto it = K.begin(); it != K.end(); ++it) {
+        count_prior = count_prior + V.find(*it)->second;
+      }
+      for (auto it = K1.begin(); it != K1.end(); ++it) {
+        count_prior1 = count_prior1 + V.find(*it)->second;
+      }
+      if (count_prior > count_prior) {
+        min_set = K;
+      }
+    }
+  }
+  return min_set;
+}
+
+set<int> CountCourse(int course, map<int, vector<vector<int>>> A, set<int> C, map<int, int> V) { // функция рекурсивно находит лучший путь для курса с min количеством, 
+  if (!A.find(course)->second.empty()) {
+    set<int> S;
+    if (!A.find(course)->second[0].empty()) {
+      for (auto i = 0; A.find(course)->second[0].size(); ++i) {
+        set<int> s1 = CountCourse(A.find(course)->second[0][i], A, C, V);
+        set_union(S.begin(), S.end(), s1.begin(), s1.end(), back_inserter(S));
+      }
+    }
+    for (auto i = 1; A.find(course)->second[i].size(); ++i) {
+      vector<set<int>> H;
+      for (auto j = 0; A.find(course)->second[i][j]; ++j) {
+        auto s2 = CountCourse(A.find(course)->second[0][i], A, C, V);
+        H.push_back(s2);
+      }
+      auto s3 = Sort(H, S, C, V);
+      set_union(S.begin(), S.end(), s3.begin(), s3.end(), back_inserter(S));
+    }
+  }
+  else {
+    set<int> S = {course};
+    return S;
+  }
+}
+
+int main() {
+  int n;
+  map<int, vector<vector<int>>> A; // храним ключ - номер курса, значение массив массивов: 1 массив это курсы, которые обязаетльно нужны, далле в каждый массив это 1 курс по выбору и его элементов
+  set<int> C; //множество 2 курсов 
+  map<int, int> V; // ключ - номер 2 курса, значение его приоретет
+  cin >> n; //кол - во курсов
+  for (int i = 0; i < n; ++i) {
+    int num;
+    cin >> num; // номер курса (не стал добавлять название курса так как по номеру однозначно определяется название)
+  }
+  int n1;
+  cin >> n1; // кол - во 2 курсов с приоритетами
+  for (int i = 0; i < n1; ++i) {
+    int s;
+    cin >> s; // номер курса
+    int pr;
+    cin >> pr; // приоритет
+    C.insert(s);
+    V.insert({s, pr});
+  }
+  int course1, course2, course3, course4;
+  cin >> course1, course2, course3, course4;
+  int min_count;
+  cin >> min_count;
+  set<int> F;
+  set_union(F.begin(), F.end(), CountCourse(course1, A, C, V).begin(), CountCourse(course1, A, C, V).end(), back_inserter(F));
+  set_union(F.begin(), F.end(), CountCourse(course2, A, C, V).begin(), CountCourse(course2, A, C, V).end(), back_inserter(F));
+  set_union(F.begin(), F.end(), CountCourse(course3, A, C, V).begin(), CountCourse(course3, A, C, V).end(), back_inserter(F));
+  set_union(F.begin(), F.end(), CountCourse(course4, A, C, V).begin(), CountCourse(course4, A, C, V).end(), back_inserter(F));
+  if (F.size() >= 7 * min_count) {
+    for (auto it = F.begin(); it != F.end(); ++it) {
+      cout << *it << endl;
+    }
+  }
+  else {
+    while (F.size() < 7 * min_count) { // ищем курс с макс приоритетом, добавляем пока количество не станет min
+      int max = 0;
+      int num1 = 0;
+      for (auto it = C.begin(); it != C.end(); ++it) {
+        if (V.find(*it)->second > max) {
+          max = V.find(*it)->second;
+          num1 = *it;
+        }
+      }
+      set_union(F.begin(), F.end(), CountCourse(num1, A, C, V).begin(), CountCourse(num1, A, C, V).end(), back_inserter(F));
+    }
+  }
+  for (auto it = F.begin(); it != F.end(); ++it) {
+    cout << *it << endl;
+  }
+
+
+}
